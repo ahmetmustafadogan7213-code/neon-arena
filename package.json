@@ -1,0 +1,25 @@
+{
+  "name": "lowpoly-arena-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Neon Arena - low-poly 3D realtime multiplayer web game (server + client)",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "build:client": "npm run build:polyfills && npm run build:sdk",
+    "build:polyfills": "esbuild vendor/polyfills-entry.mjs --bundle --format=iife --minify --outfile=public/vendor/buffer-polyfill.js",
+    "build:sdk": "esbuild vendor/colyseus-entry.mjs --bundle --format=iife --platform=browser --alias:ws=./vendor/ws-stub.js --minify --outfile=public/vendor/colyseus-sdk.js"
+  },
+  "dependencies": {
+    "@colyseus/ws-transport": "^0.15.3",
+    "babylonjs": "^9.35.0",
+    "buffer": "^6.0.3",
+    "colyseus": "^0.15.26",
+    "colyseus.js": "^0.15.28",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

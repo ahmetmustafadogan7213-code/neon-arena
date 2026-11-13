@@ -1,0 +1,13 @@
+# Render Blueprint — Neon Arena
+# Render'da "New +" -> "Blueprint" seçip bu depoyu göstererek tek adımda kurulur.
+services:
+  - type: web
+    name: neon-arena
+    runtime: node
+    plan: free
+    buildCommand: npm install --include=dev && npm run build:client
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"

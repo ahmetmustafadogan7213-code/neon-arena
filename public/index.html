@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#05060f" />
+  <title>NEON ARENA — 3D Çok Oyunculu Arena</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- 3D sahne -->
+  <canvas id="renderCanvas" touch-action="none"></canvas>
+  <div id="scene-vignette" class="scene-vignette"></div>
+
+  <!-- =================================================================== -->
+  <!-- OYUN İÇİ HUD                                                         -->
+  <!-- =================================================================== -->
+  <div id="hud" class="hud is-hidden" aria-hidden="true">
+    <div class="hud-topbar">
+      <div class="hud-stats">
+        <div class="stat-pill">
+          <span class="stat-label">Kupa</span>
+          <span class="stat-value" id="hud-trophies">0</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">Öldürme</span>
+          <span class="stat-value" id="hud-kills">0</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">Ölüm</span>
+          <span class="stat-value" id="hud-deaths">0</span>
+        </div>
+      </div>
+
+      <div class="leaderboard" id="hud-leaderboard">
+        <div class="leaderboard-title">SKOR TABLOSU</div>
+        <ul id="hud-leaderboard-list"></ul>
+      </div>
+
+      <div class="hud-actions">
+        <div class="ping" id="hud-ping">— ms</div>
+        <button class="btn btn-ghost sm" id="btn-hud-fullscreen" type="button">Tam Ekran</button>
+        <button class="btn btn-ghost sm danger" id="btn-hud-leave" type="button">Ayrıl</button>
+      </div>
+    </div>
+
+    <div class="killfeed" id="hud-killfeed"></div>
+
+    <div class="hud-bottom">
+      <div class="hud-bottom-left">
+        <div class="health">
+          <div class="health-bar"><div class="health-fill" id="hud-health-fill"></div></div>
+          <div class="health-num" id="hud-health-num">100</div>
+        </div>
+        <div class="abilities">
+          <div class="ability" id="ab-shoot">
+            <div class="ability-cd" id="ab-shoot-cd"></div>
+            <div class="ability-face"><span class="ability-glyph">◈</span></div>
+            <div class="ability-text">
+              <span class="ability-name">MERMİ</span>
+              <span class="ability-key">Sol Tık</span>
+            </div>
+          </div>
+          <div class="ability super" id="ab-super">
+            <div class="ability-cd" id="ab-super-cd"></div>
+            <div class="ability-face"><span class="ability-glyph">⚡</span></div>
+            <div class="ability-text">
+              <span class="ability-name" id="ab-super-name">SÜPER</span>
+              <span class="ability-key">Boşluk / Sağ Tık</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="room-tag" id="hud-room-name">Arena</div>
+    </div>
+
+    <div class="crosshair" id="crosshair">
+      <span class="ch-line ch-t"></span>
+      <span class="ch-line ch-b"></span>
+      <span class="ch-line ch-l"></span>
+      <span class="ch-line ch-r"></span>
+      <span class="ch-dot"></span>
+    </div>
+    <div class="hitmarker" id="hitmarker"><span></span><span></span><span></span><span></span></div>
+
+    <div class="damage-vignette" id="damage-vignette"></div>
+
+    <div class="respawn-overlay is-hidden" id="respawn-overlay">
+      <div class="respawn-box">
+        <div class="respawn-title">ELENDİN</div>
+        <div class="respawn-sub" id="respawn-killer">—</div>
+        <div class="respawn-count" id="respawn-count">3</div>
+        <div class="respawn-hint">Yeniden doğuyorsun…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- EKRANLAR                                                            -->
+  <!-- =================================================================== -->
+  <div id="screens">
+
+    <!-- Yükleniyor -->
+    <section class="screen is-active" data-screen="loading">
+      <div class="screen-inner center">
+        <div class="logo-block">
+          <div class="logo-mark"></div>
+          <h1 class="logo-text">NEON<span>ARENA</span></h1>
+          <p class="logo-sub">3D çok oyunculu arena savaşı</p>
+        </div>
+        <div class="loader">
+          <div class="loader-bar"><div class="loader-fill" id="loader-fill"></div></div>
+          <div class="loader-text" id="loader-text">Hazırlanıyor…</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Giriş ekranı -->
+    <section class="screen" data-screen="login">
+      <div class="screen-inner login-inner">
+        <div class="login-brand">
+          <div class="logo-mark"></div>
+          <h1 class="logo-text">NEON<span>ARENA</span></h1>
+          <p class="logo-sub">3D çok oyunculu arena savaşı</p>
+        </div>
+
+        <div class="login-card panel glass">
+          <label class="input-label" for="input-login-name">Takma adın</label>
+          <input class="input" id="input-login-name" type="text" maxlength="14" placeholder="Adını gir" autocomplete="off" spellcheck="false" />
+          <button class="btn btn-primary xl" id="btn-login-play" type="button">
+            <span class="btn-main">OYNA</span>
+            <span class="btn-sub">Tankını seç ve arenaya gir</span>
+          </button>
+          <div class="login-hint">
+            Arkada seçili tankın sergilenir ·
+            <b id="login-tank-count">0</b> tank ·
+            <b id="login-map-count">0</b> harita
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ana menü -->
+    <section class="screen" data-screen="menu">
+      <div class="screen-inner">
+        <header class="top-strip">
+          <div class="brand">
+            <div class="logo-mark sm"></div>
+            <span>NEON ARENA</span>
+          </div>
+          <div class="top-actions">
+            <button class="btn btn-ghost sm" id="btn-menu-fullscreen" type="button">Tam Ekran</button>
+          </div>
+        </header>
+
+        <div class="menu-grid">
+          <div class="panel glass profile-panel">
+            <div class="panel-title">OYUNCU</div>
+            <div class="rank-badge" id="profile-rank-badge">
+              <div class="rank-emblem" id="profile-rank-emblem">B</div>
+              <div class="rank-info">
+                <div class="rank-name" id="profile-rank-name">Bronz</div>
+                <div class="rank-trophies"><span id="profile-trophies">0</span> kupa</div>
+              </div>
+            </div>
+            <div class="input-row">
+              <label class="input-label" for="input-name">Takma ad</label>
+              <input class="input" id="input-name" type="text" maxlength="14" placeholder="Adını gir" autocomplete="off" spellcheck="false" />
+            </div>
+            <div class="stat-grid">
+              <div class="mini-stat"><span id="profile-kills">0</span><small>Öldürme</small></div>
+              <div class="mini-stat"><span id="profile-deaths">0</span><small>Ölüm</small></div>
+              <div class="mini-stat"><span id="profile-matches">0</span><small>Maç</small></div>
+            </div>
+            <div class="trophy-progress">
+              <div class="trophy-progress-bar"><div class="trophy-progress-fill" id="profile-progress-fill"></div></div>
+              <div class="trophy-progress-text" id="profile-progress-text">Sonraki rütbeye 100 kupa</div>
+            </div>
+          </div>
+
+          <div class="panel glass play-panel">
+            <div class="panel-title">OYNA</div>
+            <button class="btn btn-primary xl" id="btn-quickplay" type="button">
+              <span class="btn-main">HIZLI OYNA</span>
+              <span class="btn-sub">Otomatik oda bul veya oluştur</span>
+            </button>
+            <button class="btn btn-secondary lg" id="btn-open-rooms" type="button">ODALARI GÖR</button>
+            <button class="btn btn-secondary lg" id="btn-open-create" type="button">ODA OLUŞTUR</button>
+            <div class="hint-text">Kontroller: <b>WASD</b> hareket · <b>Fare</b> nişan · <b>Sol Tık</b> ateş · <b>Boşluk</b> süper güç · <b>F</b> tam ekran</div>
+          </div>
+
+          <div class="panel glass garage-panel">
+            <div class="panel-title">TANK SEÇ <span class="badge" id="tank-count">0</span>
+              <span class="hint-inline">Her maç rastgele harita</span>
+            </div>
+            <div class="garage-layout">
+              <div class="select-grid tanks" id="tank-select"></div>
+              <div class="tank-detail" id="tank-detail"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Odalar -->
+    <section class="screen" data-screen="rooms">
+      <div class="screen-inner">
+        <header class="top-strip">
+          <button class="btn btn-ghost sm" id="btn-rooms-back" type="button">← Geri</button>
+          <div class="strip-title">ODALAR</div>
+          <div class="top-actions">
+            <button class="btn btn-ghost sm" id="btn-rooms-refresh" type="button">Yenile</button>
+          </div>
+        </header>
+
+        <div class="rooms-layout">
+          <div class="panel glass rooms-panel">
+            <div class="panel-title">
+              AÇIK ODALAR <span class="badge" id="rooms-count">0</span>
+            </div>
+            <ul class="room-list" id="room-list"></ul>
+            <div class="empty-state is-hidden" id="rooms-empty">
+              Şu an açık oda yok. Hemen bir tane oluştur!
+            </div>
+          </div>
+
+          <div class="panel glass create-panel">
+            <div class="panel-title">YENİ ODA OLUŞTUR</div>
+            <div class="input-row">
+              <label class="input-label" for="create-name">Oda adı</label>
+              <input class="input" id="create-name" type="text" maxlength="24" placeholder="Örn. İstanbul Arena" />
+            </div>
+            <div class="input-row">
+              <label class="input-label" for="create-max">Maksimum oyuncu: <b id="create-max-label">8</b></label>
+              <input class="range" id="create-max" type="range" min="2" max="16" value="8" />
+            </div>
+            <button class="btn btn-primary lg" id="btn-create-room" type="button">Oluştur ve Katıl</button>
+            <div class="hint-text">Odalar bağımsız çalışır. Arkadaşlarını oda adıyla davet et.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Maç sonu / sonuç -->
+    <section class="screen" data-screen="result">
+      <div class="screen-inner center">
+        <div class="panel glass result-panel">
+          <div class="result-title" id="result-title">MAÇ BİTTİ</div>
+          <div class="result-sub" id="result-sub">İyi oyundu!</div>
+          <div class="result-trophies">
+            <div class="result-trophy-value" id="result-trophies">0</div>
+            <div class="result-trophy-label">TOPLAM KUPA</div>
+            <div class="result-trophy-delta" id="result-trophy-delta">+0</div>
+          </div>
+          <div class="stat-grid">
+            <div class="mini-stat"><span id="result-kills">0</span><small>Öldürme</small></div>
+            <div class="mini-stat"><span id="result-deaths">0</span><small>Ölüm</small></div>
+            <div class="mini-stat"><span id="result-time">0s</span><small>Süre</small></div>
+          </div>
+          <div class="result-actions">
+            <button class="btn btn-primary lg" id="btn-result-again" type="button">TEKRAR OYNA</button>
+            <button class="btn btn-secondary lg" id="btn-result-menu" type="button">ANA MENÜ</button>
+          </div>
+          <div class="result-error is-hidden" id="result-error"></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Toast bildirim -->
+  <div id="toast-wrap" class="toast-wrap"></div>
+
+  <script src="/vendor/babylon/babylon.js"></script>
+  <script src="/vendor/buffer-polyfill.js"></script>
+  <script src="/vendor/colyseus-sdk.js"></script>
+  <script src="/shared/arena-data.js"></script>
+  <script src="js/net.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
